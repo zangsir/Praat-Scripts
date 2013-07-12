@@ -1,0 +1,44 @@
+documentation of:
+1.synthesis from pitch tracks
+2.extracting the corresponding segments from the original sound 
+3.combine into stereo
+
+
+
+###############################
+1.synthesis from pitch tracks
+The pitch track synthesis script is used to synthesize a pure tone melody from a pitch track listing that was extracted from an audio recording sound file. 
+
+In current settings, the predominent pitch is listed as positive values, and accompaniment parts are 0. (the pitch tracks are extracted using MELODIA by J.Salamon at MTG, UPf).
+
+This synthesis only synthesize the positive values (the parts where MELODIA thinks it's the predominent melody) and get rid of the 0 part. 
+
+This script does not take into account of the confidence score that is available in the pitch track file. 
+
+Since all pitch track files are named by their MBID, in order to select the targeted pitch track files you need to first get a list of the MBID corrsponding to your desired sound file names. To do that you use the query yaml file script.
+
+For instance, I want to synthesize 20 arias of Beijing Opera sound files. I know their titles. I go into the query script and return with a list of results of their full title and their MBID (and their artist info). Since the same aria might be sung by several artists, I might get duplicate entries. I then need to manually select which is the artist I want and get rid of the other duplicate entries.
+
+Now I have a list of 20 MBIDs, each in occupying a line, stored in a text file called mbidsel.txt. Then I can run the synthesize script, which will first read the mbidsel.txt, get the MBIDs of targeted pitch track files, then according to these MBIDs, it reads the corresponding pitch track files in the pitch_data folder (which contains currently 560 pitch track files extracted by Ken Chen), and one by one, synthesize these pitch tracks into 20 wav files. 
+
+The resulting sound file is uniquely identified by the first 6 digits of its corresponding MBID, and the number preceding the MBID is the rank of the current file in the batched it is being processed (if it is the 2nd file in the batch, with first 6 digits of MBID being 0538c3, then it will be newSound_2_0538c3.wav).
+
+Along the away, because of the limitation of memory, (praat only allows to store 10000 objects in its object window), we first save smaller segments of the synthesized file (newSound_1_1.wav, newSound_1_2.wav, etc), and finally these are contatenated into the whole synthesis file (newSound_1.wav). Then it starts on the second one and do the same, in the end derives newSound_2.wav, until it loops through all 20.
+
+In order to adjust for the deviations of time in the synthesize, I insert a 0.197s (it has to be that number) of silence in between each phrase of segments with positive values. In contrast, this value will be 0.2s in the original sound extraction script. This is to ensure that the two channels (synthesis and original extraction) will be in sync when they are combined into stereo. At least it will ensure that no perceivable gaps and delays will be heard when these are combined.
+
+This script is better ran on command line to achieve faster execution, instead of running it from Praat shell(you can modify it according to your path):
+
+$/Applications/Praat.app/Contents/MacOS/Praat ~/Desktop/synth1.praat
+
+
+###################
+2.extracting the corresponding segments from the original sound 
+This is a straight forward script once you read the documentation above. It simply extract all the parts with positive pitch values and concatenate into a sound file, with each part separated by a 0.2s silence. This should be in sync with the synthesized track completely.So that you can hear how the synthesized pitch track compares to the original recording (in the parts where it is thought to be the predominent melody).
+
+To run it, you must first load all the sound files (say those 20) into Praat object window. This is because the sound files are all named inconsistently and it will be hard for the script to know what exactly is the name it should load. Simply load them manually into the praat object window and select all of them and run the script.
+
+
+###################
+3.combining into stereo
+Currently I am doing this manually, but may soon write a short script for that. The thing to notice is that while the synthesized track is mono, the original sound is stereo before and after the extraction. So you need to read and save the original extraction into a mono sound before the combining them into stereo. (or at least to make sure).
